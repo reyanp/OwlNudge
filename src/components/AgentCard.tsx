@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Sparkles } from "lucide-react";
+import { MessageCircle, Sparkles, Brain, TrendingUp, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AgentCardProps {
@@ -18,19 +18,19 @@ interface AgentCardProps {
 
 const agentConfig = {
   sofia: {
-    emoji: '🧠',
+    icon: Brain,
     cardGradient: 'from-purple-200 via-pink-200 to-purple-300',
     color: 'purple',
     description: 'Financial Literacy Coach'
   },
   marcus: {
-    emoji: '📈',
+    icon: TrendingUp,
     cardGradient: 'from-blue-200 via-indigo-200 to-blue-300',
     color: 'blue',
     description: 'Investment Educator'
   },
   luna: {
-    emoji: '💖',
+    icon: Heart,
     cardGradient: 'from-orange-200 via-pink-200 to-orange-300',
     color: 'orange',
     description: 'Behavioral Coach'
@@ -39,6 +39,7 @@ const agentConfig = {
 
 export function AgentCard({ agent, onChat, className }: AgentCardProps) {
   const config = agentConfig[agent.id];
+  const Icon = config.icon;
 
   return (
     <div className={cn(
@@ -68,7 +69,7 @@ export function AgentCard({ agent, onChat, className }: AgentCardProps) {
             "bg-white/90 backdrop-blur-sm shadow-xl group-hover:scale-110 group-hover:shadow-2xl",
             "border border-white/50"
           )}>
-            <span className="text-2xl">{config.emoji}</span>
+            <Icon className="w-8 h-8 text-slate-700" />
           </div>
           
           <div className="flex-1 min-w-0">

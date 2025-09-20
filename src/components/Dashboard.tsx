@@ -42,30 +42,32 @@ const mockAgents = [
 const mockMetrics = [
   {
     title: "Total Balance",
-    value: "$24,563",
-    change: { value: 12.5, isPositive: true, timeframe: "this month" },
-    icon: 'dollar' as const,
+    value: 24563,
+    kind: 'currency' as const,
+    currency: 'USD',
+    change: { value: 12.5, isPositive: true },
     variant: 'success' as const
   },
   {
     title: "Credit Score",
-    value: "742",
-    change: { value: -8, isPositive: false, timeframe: "30 days" },
-    icon: 'credit' as const,
+    value: 742,
+    kind: 'number' as const,
+    change: { value: -8, isPositive: false },
     variant: 'warning' as const
   },
   {
     title: "Savings Goal",
-    value: "68%",
-    change: { value: 15, isPositive: true, timeframe: "this week" },
-    icon: 'target' as const,
+    value: 0.68, // 68% as decimal
+    kind: 'percent' as const,
+    change: { value: 15, isPositive: true },
     variant: 'default' as const
   },
   {
     title: "Investment Portfolio",
-    value: "$8,420",
-    change: { value: 3.2, isPositive: true, timeframe: "today" },
-    icon: 'trending-up' as const,
+    value: 8420,
+    kind: 'currency' as const,
+    currency: 'USD',
+    change: { value: 3.2, isPositive: true },
     variant: 'success' as const
   }
 ];
@@ -215,8 +217,9 @@ export function Dashboard() {
               key={index}
               title={metric.title}
               value={metric.value}
+              kind={metric.kind}
+              currency={metric.currency}
               change={metric.change}
-              icon={metric.icon}
               variant={metric.variant}
               className="agent-entrance"
             />

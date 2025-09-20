@@ -1,54 +1,36 @@
-import { TrendingUp, TrendingDown, DollarSign, CreditCard, Target, PiggyBank } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MetricValue } from "./MetricValue";
+
+type Delta = { 
+  value: number; 
+  isPositive: boolean; 
+};
 
 interface FinancialMetricProps {
   title: string;
-  value: string | number;
-  change?: {
-    value: number;
-    isPositive: boolean;
-    timeframe: string;
-  };
-  icon?: 'dollar' | 'credit' | 'target' | 'savings' | 'trending-up' | 'trending-down';
+  value: number;
+  kind: 'currency' | 'percent' | 'number';
+  currency?: string;
+  change?: Delta;
   variant?: 'default' | 'success' | 'warning' | 'danger';
   className?: string;
 }
 
-const iconMap = {
-  dollar: DollarSign,
-  credit: CreditCard,
-  target: Target,
-  savings: PiggyBank,
-  'trending-up': TrendingUp,
-  'trending-down': TrendingDown,
-};
-
 const variantStyles = {
   default: {
-    bg: 'bg-white',
-    iconBg: 'bg-indigo-500',
-    iconColor: 'text-white',
     border: 'border-slate-200',
     accentBorder: 'border-l-indigo-500'
   },
   success: {
-    bg: 'bg-white',
-    iconBg: 'bg-emerald-500',
-    iconColor: 'text-white',
     border: 'border-slate-200',
     accentBorder: 'border-l-emerald-500'
   },
   warning: {
-    bg: 'bg-white',
-    iconBg: 'bg-amber-500',
-    iconColor: 'text-white',
     border: 'border-slate-200',
     accentBorder: 'border-l-amber-500'
   },
   danger: {
-    bg: 'bg-white',
-    iconBg: 'bg-red-500',
-    iconColor: 'text-white',
     border: 'border-slate-200',
     accentBorder: 'border-l-red-500'
   }
@@ -56,13 +38,13 @@ const variantStyles = {
 
 export function FinancialMetric({ 
   title, 
-  value, 
+  value,
+  kind,
+  currency,
   change, 
-  icon = 'dollar', 
   variant = 'default',
   className 
 }: FinancialMetricProps) {
-  const Icon = iconMap[icon];
   const styles = variantStyles[variant];
   
   return (
@@ -73,46 +55,41 @@ export function FinancialMetric({
       styles.accentBorder,
       className
     )}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-slate-600 mb-3 uppercase tracking-wide">
-            {title}
-          </p>
-          <div className="flex items-baseline gap-3">
-            <h3 className="text-3xl font-bold text-slate-900 metric-counter">
-              {typeof value === 'number' ? value.toLocaleString() : value}
-            </h3>
-            {change && (
-              <div className={cn(
-                "flex items-center gap-1 text-sm font-semibold px-2 py-1 rounded-full",
-                change.isPositive 
-                  ? "text-emerald-700 bg-emerald-100 border border-emerald-200" 
-                  : "text-red-700 bg-red-100 border border-red-200"
-              )}>
-                {change.isPositive ? (
-                  <TrendingUp className="w-3 h-3" />
-                ) : (
-                  <TrendingDown className="w-3 h-3" />
-                )}
-                <span>
-                  {change.isPositive ? '+' : ''}{change.value}%
-                </span>
-              </div>
-            )}
-          </div>
-          {change && (
-            <p className="text-xs text-slate-500 mt-1 font-medium">
-              {change.timeframe}
-            </p>
-          )}
-        </div>
+      <div className="space-y-4">
+        <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">
+          {title}
+        </p>
         
-        <div className={cn(
-          "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200",
-          "border-2 border-white shadow-lg hover:scale-105 hover:shadow-xl",
-          styles.iconBg
-        )}>
-          <Icon className={cn("w-7 h-7", styles.iconColor)} />
+        <div className="flex items-center justify-between gap-3 min-w-0">
+          {/* Compact value with tooltip for full precision */}
+          <div className="min-w-0 flex-1">
+            <MetricValue 
+              kind={kind}
+              value={value}
+              currency={currency}
+            />
+          </div>
+          
+          {/* Change indicator - smaller and more subtle */}
+          {change && (
+            <div className={cn(
+              "flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0",
+              change.isPositive 
+                ? "text-emerald-700 bg-emerald-100 border border-emerald-200" 
+                : "text-red-700 bg-red-100 border border-red-200"
+            )}
+            aria-label={`Change ${change.isPositive ? "up" : "down"} ${Math.abs(change.value)}%`}
+            >
+              {change.isPositive ? (
+                <TrendingUp className="w-3 h-3" aria-hidden />
+              ) : (
+                <TrendingDown className="w-3 h-3" aria-hidden />
+              )}
+              <span className="tabular-nums">
+                {change.isPositive ? '+' : ''}{change.value}%
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

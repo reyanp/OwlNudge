@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { AgentCard } from "./AgentCard";
 import { FinancialMetric } from "./FinancialMetric";
-import { NotificationCenter } from "./NotificationCenter";
+import { NotificationsButton } from "./header/NotificationsButton";
+import { NotificationsDrawer } from "./notifications/NotificationsDrawer";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Bell, Settings, User, Sparkles, ArrowRight } from "lucide-react";
+import { Settings, User, Sparkles, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 // Mock data for demonstration
 const mockAgents = [
@@ -111,6 +111,7 @@ const mockNotifications = [
 export function Dashboard() {
   const [notifications, setNotifications] = useState(mockNotifications);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+  const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
 
   const handleChatWithAgent = (agentId: string) => {
     setSelectedAgent(agentId);
@@ -124,9 +125,7 @@ export function Dashboard() {
     );
   };
 
-  const handleDismissNotification = (notificationId: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== notificationId));
-  };
+
 
   const handleTakeAction = (notificationId: string, agentId: string) => {
     handleMarkAsRead(notificationId);
@@ -153,18 +152,10 @@ export function Dashboard() {
             </div>
             
             <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="relative p-3 hover:bg-slate-100 rounded-xl border-2 border-transparent hover:border-slate-200 transition-all"
-              >
-                <Bell className="w-5 h-5 text-slate-600" />
-                {unreadNotifications > 0 && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">
-                    {unreadNotifications}
-                  </div>
-                )}
-              </Button>
+              <NotificationsButton 
+                count={unreadNotifications}
+                onOpen={() => setNotificationDrawerOpen(true)}
+              />
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -194,15 +185,21 @@ export function Dashboard() {
               </h2>
               <p className="text-lg text-slate-600">
                 {proactiveAgents > 0 && (
-                  <span className="inline-flex items-center gap-2 text-indigo-600 font-semibold bg-indigo-50 px-3 py-2 rounded-full border border-indigo-200">
+                  <button 
+                    onClick={() => setNotificationDrawerOpen(true)}
+                    className="inline-flex items-center gap-2 text-indigo-600 font-semibold bg-indigo-50 px-3 py-2 rounded-full border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 transition-all"
+                  >
                     <Sparkles className="w-4 h-4" />
                     {proactiveAgents} agent{proactiveAgents > 1 ? 's' : ''} have insights for you
-                  </span>
+                  </button>
                 )}
               </p>
             </div>
             {proactiveAgents > 0 && (
-              <Button className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-semibold px-6 py-3 rounded-xl border-2 border-indigo-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
+              <Button 
+                onClick={() => setNotificationDrawerOpen(true)}
+                className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-semibold px-6 py-3 rounded-xl border-2 border-indigo-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+              >
                 View All Insights
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
@@ -226,59 +223,74 @@ export function Dashboard() {
           ))}
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Agents */}
-          <div className="lg:col-span-2 space-y-6">
-            <div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-6">
-                Your Financial Team
-              </h3>
-              <div className="space-y-5">
-                {mockAgents.map((agent, index) => (
-                  <AgentCard
-                    key={agent.id}
-                    agent={agent}
-                    onChat={handleChatWithAgent}
-                    className="agent-entrance"
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white border-2 border-slate-200 rounded-xl shadow-md p-6">
-              <h3 className="text-xl font-bold text-slate-900 mb-5">
-                Quick Actions
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <button className="h-24 flex flex-col items-center justify-center gap-3 bg-white border-2 border-slate-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition-all hover:-translate-y-0.5 shadow-sm hover:shadow-md">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center border-2 border-white shadow-md">
-                    <Sparkles className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-sm font-semibold text-slate-700">Ask Any Agent</span>
-                </button>
-                <button className="h-24 flex flex-col items-center justify-center gap-3 bg-white border-2 border-slate-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition-all hover:-translate-y-0.5 shadow-sm hover:shadow-md">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center border-2 border-white shadow-md">
-                    <ArrowRight className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-sm font-semibold text-slate-700">Set New Goal</span>
-                </button>
-              </div>
+        {/* Main Content - Full Width */}
+        <div className="space-y-8">
+          {/* Agents Section */}
+          <div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-6">
+              Your Financial Team
+            </h3>
+            <div className="space-y-5">
+              {mockAgents.map((agent, index) => (
+                <AgentCard
+                  key={agent.id}
+                  agent={agent}
+                  onChat={handleChatWithAgent}
+                  className="agent-entrance"
+                />
+              ))}
             </div>
           </div>
 
-          {/* Right Column - Notifications */}
-          <div>
-            <NotificationCenter
-              notifications={notifications}
-              onMarkAsRead={handleMarkAsRead}
-              onDismiss={handleDismissNotification}
-              onTakeAction={handleTakeAction}
-              className="sticky top-24"
-            />
+          {/* Quick Actions */}
+          <div className="bg-white border-2 border-slate-200 rounded-xl shadow-md p-6">
+            <h3 className="text-xl font-bold text-slate-900 mb-5">
+              Quick Actions
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <button className="h-24 flex flex-col items-center justify-center gap-3 bg-white border-2 border-slate-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition-all hover:-translate-y-0.5 shadow-sm hover:shadow-md">
+                <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center border-2 border-white shadow-md">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-slate-700">Ask Any Agent</span>
+              </button>
+              <button className="h-24 flex flex-col items-center justify-center gap-3 bg-white border-2 border-slate-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition-all hover:-translate-y-0.5 shadow-sm hover:shadow-md">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center border-2 border-white shadow-md">
+                  <ArrowRight className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-slate-700">Set New Goal</span>
+              </button>
+              <button 
+                onClick={() => setNotificationDrawerOpen(true)}
+                className="h-24 flex flex-col items-center justify-center gap-3 bg-white border-2 border-slate-200 rounded-xl hover:border-purple-300 hover:bg-purple-50 transition-all hover:-translate-y-0.5 shadow-sm hover:shadow-md"
+              >
+                <div className="w-10 h-10 rounded-xl bg-purple-500 flex items-center justify-center border-2 border-white shadow-md">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-slate-700">View Insights</span>
+              </button>
+              <button className="h-24 flex flex-col items-center justify-center gap-3 bg-white border-2 border-slate-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all hover:-translate-y-0.5 shadow-sm hover:shadow-md">
+                <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center border-2 border-white shadow-md">
+                  <ArrowRight className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-slate-700">Financial Report</span>
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Notifications Drawer */}
+        <NotificationsDrawer
+          open={notificationDrawerOpen}
+          onOpenChange={setNotificationDrawerOpen}
+          notifications={notifications}
+          onMarkAllRead={() => {
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            toast.success("All notifications marked as read");
+          }}
+          onMarkAsRead={handleMarkAsRead}
+          onTakeAction={handleTakeAction}
+        />
       </div>
     </div>
   );

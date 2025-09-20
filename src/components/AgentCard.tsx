@@ -116,11 +116,7 @@ export function AgentCard({ agent, onChat, className }: AgentCardProps) {
             Chat Now
           </button>
           
-          {agent.notificationCount && agent.notificationCount > 0 && (
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-red-500 text-white text-sm font-bold border-2 border-white shadow-xl notification-pop">
-              {agent.notificationCount}
-            </div>
-          )}
+
         </div>
       </div>
     </div>

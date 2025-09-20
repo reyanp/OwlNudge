@@ -1,0 +1,355 @@
+/* FinancePal Design System - Premium Fintech Aesthetic */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Core Background System - Stripe-inspired */
+    --background: 248 250 252;
+    /* Cool gray background like Stripe */
+    --background-secondary: 241 245 249;
+    /* Slightly darker sections */
+    --background-tertiary: 226 232 240;
+    /* Defined section backgrounds */
+    --foreground: 15 23 42;
+    /* Very dark slate - maximum contrast */
+    --foreground-secondary: 30 41 59;
+    /* Dark slate for secondary text */
+    --foreground-muted: 100 116 139;
+    /* Muted but still readable */
+
+    /* Card System - Bold Borders & Shadows */
+    --card: 255 255 255;
+    /* Pure white cards */
+    --card-foreground: 15 23 42;
+    /* High contrast text */
+    --card-border: 226 232 240;
+    /* Visible slate-200 borders */
+    --card-border-strong: 203 213 225;
+    /* Stronger slate-300 borders */
+    --card-border-accent: 148 163 184;
+    /* Accent borders slate-400 */
+    --card-hover: 248 250 252;
+    /* Subtle hover state */
+    --card-shadow: 0 1px 3px 0 rgb(15 23 42 / 0.1), 0 1px 2px -1px rgb(15 23 42 / 0.1);
+    --card-shadow-hover: 0 4px 6px -1px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.1);
+    --card-shadow-strong: 0 10px 15px -3px rgb(15 23 42 / 0.1), 0 4px 6px -4px rgb(15 23 42 / 0.1);
+
+    /* FinancePal Brand Colors */
+    --primary: 239 68 68;
+    /* red-500 for FinancePal brand */
+    --primary-foreground: 255 255 255;
+    --primary-hover: 220 38 38;
+    /* red-600 */
+    --primary-light: 254 226 226;
+    /* red-100 */
+
+    /* Agent Color System */
+    --sofia: 236 72 153;
+    /* pink-500 - Financial Literacy Coach */
+    --sofia-light: 252 231 243;
+    /* pink-100 */
+    --sofia-dark: 219 39 119;
+    /* pink-600 */
+
+    --marcus: 99 102 241;
+    /* indigo-500 - Investment Educator */
+    --marcus-light: 224 231 255;
+    /* indigo-100 */
+    --marcus-dark: 79 70 229;
+    /* indigo-600 */
+
+    --luna: 34 197 94;
+    /* emerald-500 - Behavioral Coach */
+    --luna-light: 209 250 229;
+    /* emerald-100 */
+    --luna-dark: 22 163 74;
+    /* emerald-600 */
+
+    /* Financial Status Colors */
+    --success: 34 197 94;
+    /* emerald-500 */
+    --success-foreground: 255 255 255;
+    --success-light: 209 250 229;
+
+    --warning: 245 158 11;
+    /* amber-500 */
+    --warning-foreground: 255 255 255;
+    --warning-light: 254 243 199;
+
+    --destructive: 239 68 68;
+    /* red-500 */
+    --destructive-foreground: 255 255 255;
+    --destructive-light: 254 226 226;
+
+    /* UI Elements */
+    --border: 226 232 240;
+    /* slate-200 */
+    --border-light: 241 245 249;
+    /* slate-100 */
+    --input: 255 255 255;
+    --input-border: 203 213 225;
+    /* slate-300 */
+    --ring: 99 102 241;
+    /* indigo-500 */
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-hover)));
+    --gradient-sofia: linear-gradient(135deg, hsl(var(--sofia)), hsl(var(--sofia-dark)));
+    --gradient-marcus: linear-gradient(135deg, hsl(var(--marcus)), hsl(var(--marcus-dark)));
+    --gradient-luna: linear-gradient(135deg, hsl(var(--luna)), hsl(var(--luna-dark)));
+    --gradient-dashboard: linear-gradient(180deg, hsl(var(--background)), hsl(var(--background-secondary)));
+
+    /* Enhanced Shadow System - Duolingo/Spotify inspired */
+    --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 0.1), 0 4px 6px -4px rgb(15 23 42 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(15 23 42 / 0.1), 0 8px 10px -6px rgb(15 23 42 / 0.1);
+    --shadow-agent: 0 8px 25px -5px rgb(99 102 241 / 0.25), 0 4px 12px -4px rgb(99 102 241 / 0.15);
+    --shadow-float: 0 25px 50px -12px rgb(15 23 42 / 0.25);
+    --shadow-button: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+    --shadow-button-hover: 0 2px 4px 0 rgb(15 23 42 / 0.1);
+
+    /* Radius System */
+    --radius: 0.75rem;
+    --radius-sm: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+@layer components {
+
+  /* Enhanced Card Styles - Stripe/Duolingo inspired */
+  .card-enhanced {
+    @apply bg-white border-2 border-slate-200 rounded-xl shadow-md;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-enhanced:hover {
+    @apply border-slate-300 shadow-lg;
+    transform: translateY(-1px);
+  }
+
+  .card-interactive {
+    @apply bg-white border-2 border-slate-200 rounded-xl shadow-md cursor-pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-interactive:hover {
+    @apply border-slate-400 shadow-xl;
+    transform: translateY(-2px);
+  }
+
+  .card-accent {
+    @apply bg-white border-2 rounded-xl shadow-lg;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Button Enhancements */
+  .btn-primary {
+    @apply bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-semibold px-4 py-2 rounded-lg;
+    @apply border border-indigo-600 shadow-button;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-primary:hover {
+    @apply from-indigo-600 to-indigo-700 shadow-button-hover;
+    transform: translateY(-1px);
+  }
+
+  .btn-outline {
+    @apply bg-white text-slate-700 font-medium px-4 py-2 rounded-lg;
+    @apply border-2 border-slate-200 shadow-button;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-outline:hover {
+    @apply border-slate-300 bg-slate-50 shadow-button-hover;
+    transform: translateY(-1px);
+  }
+
+  /* Agent Avatar Animations */
+  .agent-entrance {
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .metric-counter {
+    animation: countUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .notification-pop {
+    animation: pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .agent-glow {
+    box-shadow: var(--shadow-agent);
+    transition: all 0.3s ease;
+  }
+
+  .agent-glow:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-float);
+  }
+
+  .gradient-text {
+    background: var(--gradient-marcus);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Text Contrast Improvements */
+  .text-high-contrast {
+    @apply text-slate-900 font-medium;
+  }
+
+  .text-medium-contrast {
+    @apply text-slate-700;
+  }
+
+  .text-subtle {
+    @apply text-slate-500;
+  }
+
+  /* Border Utilities */
+  .border-strong {
+    @apply border-2 border-slate-300;
+  }
+
+  .border-accent {
+    @apply border-2 border-slate-400;
+  }
+
+  .divider {
+    @apply border-t border-slate-200;
+  }
+
+  .divider-strong {
+    @apply border-t-2 border-slate-300;
+  }
+}
+
+@layer utilities {
+
+  /* Custom Animations */
+  @keyframes slideUp {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes countUp {
+    0% {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes pop {
+    0% {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes pulse-agent {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  .animate-pulse-agent {
+    animation: pulse-agent 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}

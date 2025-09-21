@@ -16,6 +16,7 @@ from app.db.database import init_db
 from app.services.websocket_manager import ConnectionManager
 from app.services.proactive_analyzer import ProactiveAnalyzer
 from app.api import chat, auth, financial_data
+from app.api import team as team_api
 from app.models.schemas import ProactiveNotification
 
 load_dotenv()
@@ -69,6 +70,7 @@ app.add_middleware(
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(financial_data.router, prefix="/api/financial", tags=["financial"])
+app.include_router(team_api.router, prefix="/api/team", tags=["team"])
 
 @app.get("/")
 async def root():

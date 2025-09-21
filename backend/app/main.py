@@ -183,10 +183,15 @@ async def trigger_demo_scenario(scenario: str):
     notification = notifications[scenario]
     notification.timestamp = datetime.now()
     
+    # Convert to dict and ensure timestamp is string for JSON serialization
+    notif_dict = notification.dict()
+    if isinstance(notif_dict.get('timestamp'), datetime):
+        notif_dict['timestamp'] = notif_dict['timestamp'].isoformat()
+    
     # Send via WebSocket to all connected clients
     await manager.broadcast({
         "type": "notification",
-        "data": notification.dict()
+        "data": notif_dict
     })
     
     return {"status": "success", "scenario": scenario, "notification": notification.dict()}

@@ -15,32 +15,32 @@ import { AskTeamModal } from "./ask/AskTeamModal";
 import { ResetQuizButton } from "./ResetQuizButton";
 import { useQuiz } from "@/contexts/QuizContext";
 
-// Mock data for demonstration
+// Mock data for demonstration - generic beginner-friendly messages
 const mockAgents = [
   {
     id: 'sofia' as const,
     name: 'Sofia',
     role: 'Financial Literacy Coach',
     status: 'active' as const,
-    lastMessage: "I noticed you missed your credit score check this month. Let's review your credit health together!",
-    notificationCount: 2,
-    isProactive: true
+    lastMessage: "Hi! I'm here to help you understand the basics of budgeting, credit scores, and building financial literacy. Ready to get started?",
+    notificationCount: 0,
+    isProactive: false
   },
   {
     id: 'marcus' as const,
     name: 'Marcus',
     role: 'Investment Educator',
-    status: 'thinking' as const,
-    lastMessage: "You have $1,200 sitting idle. I found some conservative investment options that match your risk profile.",
-    notificationCount: 1,
-    isProactive: true
+    status: 'idle' as const,
+    lastMessage: "Hello! I specialize in teaching investment fundamentals and helping you understand different ways to grow your money over time.",
+    notificationCount: 0,
+    isProactive: false
   },
   {
     id: 'luna' as const,
     name: 'Luna',
     role: 'Behavioral Coach',
     status: 'idle' as const,
-    lastMessage: "Great job staying under budget this week! Your dining expenses are down 15%.",
+    lastMessage: "Welcome! I focus on helping you build healthy money habits and understand the psychology behind financial decisions.",
     notificationCount: 0,
     isProactive: false
   }
@@ -126,8 +126,8 @@ export function Dashboard() {
   const { quizData, getUserProfile } = useQuiz();
   const userProfile = getUserProfile();
   
-  // Use real backend data
-  const { metrics, loading: metricsLoading, error: metricsError } = useFinancialMetrics();
+  // Use real backend data with quiz personalization
+  const { metrics, loading: metricsLoading, error: metricsError } = useFinancialMetrics(quizData);
   const { 
     notifications, 
     unreadCount, 
@@ -151,7 +151,66 @@ export function Dashboard() {
     handleChatWithAgent(agentId);
   };
 
-  const proactiveAgents = mockAgents.filter(a => a.isProactive).length;
+  // Generate personalized agent messages based on quiz data
+  const getPersonalizedAgents = () => {
+    if (!quizData) return mockAgents;
+    
+    const personalizedAgents = [...mockAgents];
+    
+    // Personalize Sofia (Financial Literacy Coach) based on primary goal
+    if (quizData.primaryGoal === 'emergency-fund') {
+      personalizedAgents[0].lastMessage = "Building an emergency fund is a smart first step! I can help you create a realistic savings plan and show you the best places to keep your emergency money.";
+      personalizedAgents[0].isProactive = true;
+      personalizedAgents[0].status = 'active';
+    } else if (quizData.primaryGoal === 'pay-debt') {
+      personalizedAgents[0].lastMessage = "Let's tackle your debt together! I can explain different payoff strategies and help you understand how to improve your credit score along the way.";
+      personalizedAgents[0].isProactive = true;
+      personalizedAgents[0].status = 'active';
+    } else if (quizData.bankAccess === 'no-bank-account' || quizData.bankAccess === 'limited-access') {
+      personalizedAgents[0].lastMessage = "I understand banking can be challenging. Let me show you alternative ways to build credit and manage money without traditional banking.";
+      personalizedAgents[0].isProactive = true;
+      personalizedAgents[0].status = 'active';
+    } else if (quizData.profession === 'student') {
+      personalizedAgents[0].lastMessage = "As a student, you're in a great position to start building good financial habits early. I can help you understand credit, budgeting, and student loans.";
+      personalizedAgents[0].isProactive = true;
+      personalizedAgents[0].status = 'thinking';
+    }
+    
+    // Personalize Marcus (Investment Educator) based on goals and risk tolerance  
+    if (quizData.primaryGoal === 'invest' || quizData.primaryGoal === 'retirement') {
+      personalizedAgents[1].lastMessage = "Great choice focusing on investing! I'll help you understand the basics, from what investments are to how to get started with your first account.";
+      personalizedAgents[1].isProactive = true;
+      personalizedAgents[1].status = 'active';
+    } else if (quizData.riskTolerance === 'conservative') {
+      personalizedAgents[1].lastMessage = "I love your cautious approach! Let me show you safe investment options that can still help your money grow over time.";
+      personalizedAgents[1].isProactive = true;
+      personalizedAgents[1].status = 'thinking';
+    } else if (quizData.profession === 'gig-worker') {
+      personalizedAgents[1].lastMessage = "As a gig worker, I can help you navigate investing with irregular income and show you flexible investment strategies that work for your lifestyle.";
+      personalizedAgents[1].isProactive = true;
+      personalizedAgents[1].status = 'thinking';
+    }
+    
+    // Personalize Luna (Behavioral Coach) based on goals and situation
+    if (quizData.primaryGoal === 'save-home') {
+      personalizedAgents[2].lastMessage = "Saving for a home takes discipline, but it's totally doable! I can help you build sustainable saving habits and avoid common spending traps.";
+      personalizedAgents[2].isProactive = true;
+      personalizedAgents[2].status = 'active';
+    } else if (quizData.profession === 'student' || quizData.income === 'under-50k') {
+      personalizedAgents[2].lastMessage = "Building good money habits doesn't require a big income. I can show you simple techniques to make the most of every dollar you earn.";
+      personalizedAgents[2].isProactive = true;
+      personalizedAgents[2].status = 'thinking';
+    } else if (quizData.immigrantStatus === 'visa-holder' || quizData.immigrantStatus === 'permanent-resident') {
+      personalizedAgents[2].lastMessage = "Navigating finances in a new country can be overwhelming. I can help you understand American financial habits and build confidence with money.";
+      personalizedAgents[2].isProactive = true;
+      personalizedAgents[2].status = 'thinking';
+    }
+    
+    return personalizedAgents;
+  };
+  
+  const personalizedAgents = getPersonalizedAgents();
+  const proactiveAgents = personalizedAgents.filter(a => a.isProactive).length;
   
   // Generate personalized welcome message based on quiz data
   const getWelcomeMessage = () => {
@@ -424,7 +483,7 @@ export function Dashboard() {
               Your Financial Team
             </h3>
             <div className="space-y-5">
-              {mockAgents.map((agent, index) => (
+              {personalizedAgents.map((agent, index) => (
                 <AgentCard
                   key={agent.id}
                   agent={agent}

@@ -11,7 +11,7 @@ import NotFound from "./pages/NotFound";
 import { DevPanel } from "./components/DevPanel";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { UXFlagsProvider } from "@/contexts/UXFlagsContext";
-import { QuizProvider } from "@/contexts/QuizContext";
+import { QuizProvider, useQuiz } from "@/contexts/QuizContext";
 
 const queryClient = new QueryClient();
 
@@ -26,13 +26,25 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-  const [isQuizCompleted, setIsQuizCompleted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user has completed the quiz
-    const completed = localStorage.getItem("quizCompleted") === "true";
-    setIsQuizCompleted(completed);
+    // Just handle initial loading - QuizProvider will manage quiz state
+    setIsLoading(false);
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-600 flex items-center justify-center animate-pulse">
+            <span className="text-3xl">🦉</span>
+          </div>
+          <p className="text-gray-600">Loading OwlNudge...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -43,33 +55,9 @@ const App = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter>
-              <Routes>
-                {/* Landing page - shown when quiz not completed */}
-                <Route 
-                  path="/" 
-                  element={
-                    isQuizCompleted ? <Navigate to="/dashboard" replace /> : <Landing />
-                  } 
-                />
-                
-                {/* Quiz route */}
-                <Route path="/quiz" element={<QuizSimplified />} />
-                
-                {/* Protected Dashboard route */}
-                <Route 
-                  path="/dashboard" 
-                  element={
-                    <ProtectedRoute>
-                      <Index />
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+                <AppRouter />
+                <DevPanel />
               </BrowserRouter>
-              <DevPanel />
             </TooltipProvider>
           </UXFlagsProvider>
         </NotificationsProvider>
@@ -77,5 +65,38 @@ const App = () => {
     </QueryClientProvider>
   );
 };
+
+// Router component that has access to QuizContext
+function AppRouter() {
+  const { isQuizCompleted } = useQuiz();
+  
+  return (
+    <Routes>
+      {/* Landing page - shown when quiz not completed */}
+      <Route 
+        path="/" 
+        element={
+          isQuizCompleted ? <Navigate to="/dashboard" replace /> : <Landing />
+        } 
+      />
+      
+      {/* Quiz route */}
+      <Route path="/quiz" element={<QuizSimplified />} />
+      
+      {/* Protected Dashboard route */}
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Index />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
 
 export default App;

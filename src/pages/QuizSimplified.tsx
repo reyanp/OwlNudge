@@ -5,8 +5,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQuiz } from "@/contexts/QuizContext";
 
 interface QuizData {
   // Basic Info
@@ -14,6 +15,13 @@ interface QuizData {
   income: string;
   employmentStatus: string;
   dependents: string;
+  
+  // Diversity & Accessibility (for underserved populations)
+  gender: string;
+  profession: string;
+  immigrantStatus: string;
+  primaryLanguage: string;
+  bankAccess: string;
   
   // Financial Situation
   savings: string;
@@ -36,12 +44,22 @@ interface QuizData {
 
 const QuizSimplified = () => {
   const navigate = useNavigate();
+  const { setQuizData: setGlobalQuizData } = useQuiz();
   const [currentStep, setCurrentStep] = useState(0);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [quizData, setQuizData] = useState<QuizData>({
     age: "",
     income: "",
     employmentStatus: "",
     dependents: "0",
+    
+    // Diversity & Accessibility
+    gender: "",
+    profession: "",
+    immigrantStatus: "",
+    primaryLanguage: "english",
+    bankAccess: "",
+    
     savings: "",
     debt: "none",
     homeOwnership: "rent",
@@ -56,7 +74,7 @@ const QuizSimplified = () => {
     emergencyFund: "none",
   });
 
-  const totalSteps = 3;
+  const totalSteps = 4;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
   const handleNext = () => {
@@ -71,10 +89,14 @@ const QuizSimplified = () => {
     }
   };
 
-  const handleComplete = () => {
-    // Save quiz data to localStorage
-    localStorage.setItem("quizCompleted", "true");
-    localStorage.setItem("quizData", JSON.stringify(quizData));
+  const handleComplete = async () => {
+    setIsCompleting(true);
+    
+    // Update global quiz context first (this triggers immediate state updates)
+    setGlobalQuizData(quizData);
+    
+    // Simulate personalization processing time - extended for proper data loading
+    await new Promise(resolve => setTimeout(resolve, 5000));
     
     // Navigate to dashboard
     navigate("/dashboard");
@@ -155,7 +177,135 @@ const QuizSimplified = () => {
           </div>
         );
 
-      case 1: // Goals & Preferences
+      case 1: // Diversity & Accessibility
+        return (
+          <div className="space-y-6">
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-4">
+                To provide you with the most relevant financial guidance, please share some optional information about yourself. 
+                This helps us understand your unique situation and provide better support.
+              </p>
+            </div>
+            
+            <div>
+              <Label>Gender (optional)</Label>
+              <RadioGroup
+                value={quizData.gender}
+                onValueChange={(value) => updateQuizData("gender", value)}
+                className="mt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="female" id="female" />
+                  <Label htmlFor="female">Female</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="male" id="male" />
+                  <Label htmlFor="male">Male</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="non-binary" id="non-binary" />
+                  <Label htmlFor="non-binary">Non-binary</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="prefer-not-to-say" id="prefer-not-to-say" />
+                  <Label htmlFor="prefer-not-to-say">Prefer not to say</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div>
+              <Label>Current Work/Study Situation</Label>
+              <RadioGroup
+                value={quizData.profession}
+                onValueChange={(value) => updateQuizData("profession", value)}
+                className="mt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="student" id="student" />
+                  <Label htmlFor="student">Student</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="gig-worker" id="gig-worker" />
+                  <Label htmlFor="gig-worker">Gig Worker (Uber, DoorDash, freelance, etc.)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="full-time" id="full-time" />
+                  <Label htmlFor="full-time">Full-time Employee</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="part-time" id="part-time" />
+                  <Label htmlFor="part-time">Part-time Employee</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="unemployed" id="unemployed" />
+                  <Label htmlFor="unemployed">Currently Looking for Work</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div>
+              <Label>Immigration Status (optional)</Label>
+              <RadioGroup
+                value={quizData.immigrantStatus}
+                onValueChange={(value) => updateQuizData("immigrantStatus", value)}
+                className="mt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="us-citizen" id="us-citizen" />
+                  <Label htmlFor="us-citizen">US Citizen</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="permanent-resident" id="permanent-resident" />
+                  <Label htmlFor="permanent-resident">Permanent Resident (Green Card)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="visa-holder" id="visa-holder" />
+                  <Label htmlFor="visa-holder">Visa Holder (H1B, F1, etc.)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="other-status" id="other-status" />
+                  <Label htmlFor="other-status">Other Status</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="prefer-not-to-say-immigration" id="prefer-not-to-say-immigration" />
+                  <Label htmlFor="prefer-not-to-say-immigration">Prefer not to say</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div>
+              <Label>Banking Access</Label>
+              <RadioGroup
+                value={quizData.bankAccess}
+                onValueChange={(value) => updateQuizData("bankAccess", value)}
+                className="mt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="traditional-bank" id="traditional-bank" />
+                  <Label htmlFor="traditional-bank">I have traditional bank accounts</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="credit-union" id="credit-union" />
+                  <Label htmlFor="credit-union">I use a credit union</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="online-only" id="online-only" />
+                  <Label htmlFor="online-only">I use online-only banks (Chime, Cash App, etc.)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="limited-access" id="limited-access" />
+                  <Label htmlFor="limited-access">I have limited banking access</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="no-bank-account" id="no-bank-account" />
+                  <Label htmlFor="no-bank-account">I don't have a bank account</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+        );
+
+      case 2: // Goals & Preferences
         return (
           <div className="space-y-6">
             <div>
@@ -240,7 +390,7 @@ const QuizSimplified = () => {
           </div>
         );
 
-      case 2: // Summary & Confirmation
+      case 3: // Summary & Confirmation
         return (
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg">
@@ -319,9 +469,51 @@ const QuizSimplified = () => {
 
   const stepTitles = [
     "Essential Information",
+    "Tell Us About You",
     "Goals & Preferences", 
     "Review & Confirm"
   ];
+
+  // Show loading screen when completing
+  if (isCompleting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6">
+          <div className="mb-8">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-blue-600 flex items-center justify-center relative">
+              <span className="text-4xl">🦉</span>
+              <div className="absolute inset-0 rounded-full border-4 border-blue-300 border-t-transparent animate-spin"></div>
+            </div>
+          </div>
+          
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Creating Your Personalized Experience
+          </h2>
+          
+          <div className="space-y-4 mb-8">
+            <div className="flex items-center justify-center gap-2 text-gray-600">
+              <Sparkles className="w-5 h-5 text-blue-500 animate-pulse" />
+              <span>Analyzing your financial profile...</span>
+            </div>
+            
+            <div className="flex items-center justify-center gap-2 text-gray-600">
+              <Sparkles className="w-5 h-5 text-purple-500 animate-pulse" style={{animationDelay: '0.5s'}} />
+              <span>Customizing your AI agents...</span>
+            </div>
+            
+            <div className="flex items-center justify-center gap-2 text-gray-600">
+              <Sparkles className="w-5 h-5 text-green-500 animate-pulse" style={{animationDelay: '1s'}} />
+              <span>Preparing personalized insights...</span>
+            </div>
+          </div>
+          
+          <p className="text-sm text-gray-500">
+            This will just take a moment. Your financial journey is about to begin!
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8">
@@ -338,8 +530,9 @@ const QuizSimplified = () => {
             <CardTitle className="text-2xl">{stepTitles[currentStep]}</CardTitle>
             <CardDescription>
               {currentStep === 0 && "Let's start with some basic information"}
-              {currentStep === 1 && "Tell us about your financial goals"}
-              {currentStep === 2 && "Review your profile and get started"}
+              {currentStep === 1 && "Help us understand your unique situation"}
+              {currentStep === 2 && "Tell us about your financial goals"}
+              {currentStep === 3 && "Review your profile and get started"}
             </CardDescription>
           </CardHeader>
           <CardContent>

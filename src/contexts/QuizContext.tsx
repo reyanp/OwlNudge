@@ -5,6 +5,14 @@ interface QuizData {
   income: string;
   employmentStatus: string;
   dependents: string;
+  
+  // Diversity & Accessibility
+  gender: string;
+  profession: string;
+  immigrantStatus: string;
+  primaryLanguage: string;
+  bankAccess: string;
+  
   savings: string;
   debt: string;
   homeOwnership: string;

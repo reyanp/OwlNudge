@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Send, Brain, TrendingUp, Heart, Loader2 } from "lucide-react";
+import { Send, Brain, TrendingUp, Heart, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAgentChat } from "@/hooks/use-backend";
+import { useAgentChat, useInstantSuggestion } from "@/hooks/use-backend";
+import { useQuiz } from "@/contexts/QuizContext";
 
 interface ChatModalProps {
   open: boolean;
@@ -47,12 +48,21 @@ const agentData = {
 export function ChatModal({ open, onOpenChange, agentId }: ChatModalProps) {
   const [inputMessage, setInputMessage] = useState("");
   const { messages, loading, sendMessage } = useAgentChat(agentId);
+  const { suggestion, loading: suggestionLoading, getSuggestion } = useInstantSuggestion(agentId);
+  const { quizData } = useQuiz();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   const agent = agentData[agentId as keyof typeof agentData];
   if (!agent) return null;
   
   const AgentIcon = agent.icon;
+
+  // Get instant suggestion when modal opens and there are no messages
+  useEffect(() => {
+    if (open && messages.length === 0 && quizData && !suggestion && !suggestionLoading) {
+      getSuggestion(quizData);
+    }
+  }, [open, messages.length, quizData, suggestion, suggestionLoading, getSuggestion]);
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
@@ -109,19 +119,40 @@ export function ChatModal({ open, onOpenChange, agentId }: ChatModalProps) {
         <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
           {messages.length === 0 ? (
             <div className="space-y-4 p-2">
-              {/* Optional initial proactive message from agent */}
-              {typeof initialAgentMessage === 'string' && initialAgentMessage.length > 0 ? (
+              {/* Show instant personalized suggestion */}
+              {suggestion ? (
+                <div className="space-y-4">
+                  <div className="flex gap-3">
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                      agent.color
+                    )}>
+                      <AgentIcon className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="bg-slate-100 rounded-2xl px-4 py-3 relative">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="w-4 h-4 text-blue-500" />
+                        <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Personalized Suggestion</span>
+                      </div>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                        {suggestion}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : suggestionLoading ? (
                 <div className="flex gap-3">
                   <div className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                    "w-8 h-8 rounded-lg flex items-center justify-center",
                     agent.color
                   )}>
                     <AgentIcon className="w-4 h-4 text-white" />
                   </div>
                   <div className="bg-slate-100 rounded-2xl px-4 py-3">
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {initialAgentMessage}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+                      <span className="text-sm text-slate-500">Analyzing your profile...</span>
+                    </div>
                   </div>
                 </div>
               ) : (

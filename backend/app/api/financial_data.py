@@ -2,8 +2,8 @@
 Financial Data API endpoints
 """
 
-from fastapi import APIRouter, HTTPException
-from typing import Dict
+from fastapi import APIRouter, HTTPException, Body
+from typing import Dict, Optional
 
 from app.models.schemas import FinancialData, DemoScenario
 from app.services.financial_simulator import (
@@ -20,10 +20,63 @@ async def get_financial_summary():
     data = await get_user_financial_data()
     return FinancialData(**data)
 
+@router.post("/summary")
+async def get_personalized_financial_summary(quiz_data: Dict = Body(...)):
+    """Get user's financial summary personalized by quiz data"""
+    data = await get_user_financial_data(quiz_data)
+    return data
+
 @router.get("/metrics")
 async def get_financial_metrics():
     """Get financial metrics for dashboard"""
     data = await get_user_financial_data()
+    
+    # Calculate additional metrics
+    savings_percentage = (data["savings_balance"] / data["total_balance"]) * 100 if data["total_balance"] > 0 else 0
+    debt_to_income = (data["credit_card_debt"] / data["monthly_income"]) * 100 if data["monthly_income"] > 0 else 0
+    
+    return {
+        "metrics": [
+            {
+                "title": "Total Balance",
+                "value": data["total_balance"],
+                "kind": "currency",
+                "currency": "USD",
+                "change": {"value": 12.5, "isPositive": True}
+            },
+            {
+                "title": "Credit Score",
+                "value": data["credit_score"],
+                "kind": "number",
+                "change": {"value": -8, "isPositive": False}
+            },
+            {
+                "title": "Savings Rate",
+                "value": data["savings_rate"] / 100,  # Convert to decimal for percent
+                "kind": "percent",
+                "change": {"value": 15, "isPositive": True}
+            },
+            {
+                "title": "Investment Portfolio",
+                "value": data["investment_balance"],
+                "kind": "currency",
+                "currency": "USD",
+                "change": {"value": 3.2, "isPositive": True}
+            }
+        ],
+        "summary": {
+            "checking": data["checking_balance"],
+            "savings": data["savings_balance"],
+            "investments": data["investment_balance"],
+            "debt": data["credit_card_debt"],
+            "net_worth": data["total_balance"] - data["credit_card_debt"]
+        }
+    }
+
+@router.post("/metrics")
+async def get_personalized_financial_metrics(quiz_data: Dict = Body(...)):
+    """Get financial metrics for dashboard, personalized by quiz data"""
+    data = await get_user_financial_data(quiz_data)
     
     # Calculate additional metrics
     savings_percentage = (data["savings_balance"] / data["total_balance"]) * 100 if data["total_balance"] > 0 else 0

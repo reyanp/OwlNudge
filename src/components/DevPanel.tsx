@@ -13,16 +13,237 @@ import {
   DollarSign,
   Zap,
   Bug,
-  X
+  X,
+  GraduationCap,
+  Car,
+  Building2,
+  Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { useUXFlags } from "@/contexts/UXFlagsContext";
+import { useQuiz } from "@/contexts/QuizContext";
+import { clearAllChatHistory, clearAllAgentMessages } from "@/hooks/use-backend";
 
 interface WebSocketMessage {
   type: string;
   data: any;
+}
+
+// Pre-made user personas for demo purposes
+const DEMO_PERSONAS = {
+  emma: {
+    name: "Emma Chen",
+    description: "College Student, Limited Banking",
+    emoji: "👩‍🎓",
+    icon: GraduationCap,
+    backstory: "Computer science major working part-time at campus. Building credit for the first time.",
+    data: {
+      age: "20",
+      income: "under-50k",
+      profession: "student",
+      gender: "female",
+      immigrantStatus: "us-citizen",
+      primaryLanguage: "english",
+      bankAccess: "online-only",
+      savings: "under-5k",
+      primaryGoal: "emergency-fund",
+      riskTolerance: "conservative",
+      timeHorizon: "short",
+      debt: "student-loans",
+      employmentStatus: "part-time",
+      dependents: "0",
+      homeOwnership: "rent",
+      monthlyExpenses: "",
+      retirementAge: "65",
+      majorPurchases: [],
+      investmentExperience: "beginner",
+      currentInvestments: [],
+      emergencyFund: "none"
+    }
+  },
+  carlos: {
+    name: "Carlos Rodriguez",
+    description: "Gig Worker, Building Stability",
+    emoji: "🚗",
+    icon: Car,
+    backstory: "Uber driver and freelance designer. Immigrant building financial foundation in the US.",
+    data: {
+      age: "28",
+      income: "50k-100k",
+      profession: "gig-worker",
+      gender: "male",
+      immigrantStatus: "permanent-resident",
+      primaryLanguage: "english",
+      bankAccess: "limited-access",
+      savings: "5k-25k",
+      primaryGoal: "save-home",
+      riskTolerance: "moderate",
+      timeHorizon: "medium",
+      debt: "credit-card",
+      employmentStatus: "self-employed",
+      dependents: "1",
+      homeOwnership: "rent",
+      monthlyExpenses: "",
+      retirementAge: "65",
+      majorPurchases: [],
+      investmentExperience: "beginner",
+      currentInvestments: [],
+      emergencyFund: "partial"
+    }
+  },
+  sarah: {
+    name: "Sarah Kim",
+    description: "Tech Professional, High Earner",
+    emoji: "💼",
+    icon: Building2,
+    backstory: "Software engineer at a startup. Wants to optimize investments and plan for early retirement.",
+    data: {
+      age: "32",
+      income: "over-150k",
+      profession: "full-time",
+      gender: "female",
+      immigrantStatus: "us-citizen",
+      primaryLanguage: "english",
+      bankAccess: "traditional-bank",
+      savings: "over-50k",
+      primaryGoal: "invest",
+      riskTolerance: "aggressive",
+      timeHorizon: "long",
+      debt: "mortgage",
+      employmentStatus: "full-time",
+      dependents: "0",
+      homeOwnership: "own",
+      monthlyExpenses: "",
+      retirementAge: "50",
+      majorPurchases: [],
+      investmentExperience: "intermediate",
+      currentInvestments: ["401k", "stocks"],
+      emergencyFund: "full"
+    }
+  },
+  amira: {
+    name: "Amira Hassan",
+    description: "Recent Immigrant, Learning System",
+    emoji: "🌍",
+    icon: Globe,
+    backstory: "Recent arrival on H1B visa. Learning American financial system while supporting family.",
+    data: {
+      age: "29",
+      income: "100k-150k",
+      profession: "full-time",
+      gender: "female",
+      immigrantStatus: "visa-holder",
+      primaryLanguage: "english",
+      bankAccess: "traditional-bank",
+      savings: "25k-50k",
+      primaryGoal: "emergency-fund",
+      riskTolerance: "conservative",
+      timeHorizon: "medium",
+      debt: "none",
+      employmentStatus: "full-time",
+      dependents: "2",
+      homeOwnership: "rent",
+      monthlyExpenses: "",
+      retirementAge: "65",
+      majorPurchases: [],
+      investmentExperience: "beginner",
+      currentInvestments: [],
+      emergencyFund: "partial"
+    }
+  }
+};
+
+function ProfileSwitcher() {
+  const { setQuizData, clearQuizData } = useQuiz();
+  
+  const loadPersona = async (personaKey: string) => {
+    const persona = DEMO_PERSONAS[personaKey as keyof typeof DEMO_PERSONAS];
+    if (persona) {
+      try {
+        // Clear all chat history (backend and frontend) first to prevent cross-contamination
+        await clearAllChatHistory();
+        clearAllAgentMessages();
+        
+        // Then set the new profile
+        setQuizData(persona.data);
+        
+        toast.success(`Switched to ${persona.name}`, {
+          description: persona.backstory
+        });
+      } catch (error) {
+        console.error('Error switching profile:', error);
+        // Still switch profile even if chat clearing fails
+        setQuizData(persona.data);
+        toast.success(`Switched to ${persona.name}`, {
+          description: persona.backstory + " (Note: Previous chat history may still be visible)"
+        });
+      }
+    }
+  };
+  
+  const clearProfile = async () => {
+    try {
+      // Clear all chat history (backend and frontend) first
+      await clearAllChatHistory();
+      clearAllAgentMessages();
+      
+      // Then clear quiz data
+      clearQuizData();
+      
+      toast.success("Cleared profile", {
+        description: "Reset to default state"
+      });
+    } catch (error) {
+      console.error('Error clearing profile:', error);
+      // Still clear profile even if chat clearing fails
+      clearQuizData();
+      toast.success("Cleared profile", {
+        description: "Reset to default state (Note: Previous chat history may still be visible)"
+      });
+    }
+  };
+  
+  return (
+    <div className="space-y-3">
+      {Object.entries(DEMO_PERSONAS).map(([key, persona]) => (
+        <Card key={key} className="p-3 hover:shadow-md transition-all cursor-pointer">
+          <button
+            onClick={() => loadPersona(key)}
+            className="w-full flex items-center gap-3 text-left group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center group-hover:from-blue-200 group-hover:to-purple-200 transition-colors">
+              <persona.icon className="w-5 h-5 text-slate-700" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-lg">{persona.emoji}</span>
+                <p className="font-semibold text-sm text-slate-900">{persona.name}</p>
+              </div>
+              <p className="text-xs text-slate-600 font-medium">{persona.description}</p>
+              <p className="text-xs text-slate-500 truncate">{persona.backstory}</p>
+            </div>
+          </button>
+        </Card>
+      ))}
+      
+      <Card className="p-3 border-red-200 hover:shadow-md transition-all cursor-pointer">
+        <button
+          onClick={clearProfile}
+          className="w-full flex items-center gap-3 text-left group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
+            <X className="w-5 h-5 text-red-700" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-sm text-red-900">Clear Profile</p>
+            <p className="text-xs text-red-600">Reset to default state</p>
+          </div>
+        </button>
+      </Card>
+    </div>
+  );
 }
 
 function UXToggles() {
@@ -125,11 +346,12 @@ export function DevPanel() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="scenarios" className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-2 p-1">
+      <Tabs defaultValue="profiles" className="flex-1 flex flex-col">
+        <TabsList className="grid w-full grid-cols-3 p-1">
+          <TabsTrigger value="profiles">Profiles</TabsTrigger>
           <TabsTrigger value="scenarios">Scenarios</TabsTrigger>
           <TabsTrigger value="notifications">
-            Notifications
+            Notifs
             {sharedNotifications.length > 0 && (
               <span className="ml-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                 {sharedNotifications.length}
@@ -137,6 +359,19 @@ export function DevPanel() {
             )}
           </TabsTrigger>
         </TabsList>
+
+        {/* Profiles Tab */}
+        <TabsContent value="profiles" className="flex-1 p-3 space-y-3">
+          <div className="space-y-2">
+            <h3 className="font-semibold text-xs text-slate-600 uppercase tracking-wider">
+              Demo User Profiles
+            </h3>
+            <p className="text-xs text-slate-500">
+              Switch between different user personas to see how the dashboard personalizes.
+            </p>
+            <ProfileSwitcher />
+          </div>
+        </TabsContent>
 
         {/* Scenarios Tab */}
         <TabsContent value="scenarios" className="flex-1 p-3 space-y-3">

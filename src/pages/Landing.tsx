@@ -6,7 +6,10 @@ import { useNavigate } from "react-router-dom";
 const Landing = () => {
   const navigate = useNavigate();
 
-  const handleStartQuiz = () => {
+  const handleStartQuiz = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Button clicked, navigating to quiz...');
     navigate("/quiz");
   };
 

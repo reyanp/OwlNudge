@@ -7,8 +7,8 @@ import random
 from datetime import datetime, timedelta
 from typing import Dict, List
 
-# Mock user financial data
-USER_DATA = {
+# Default user financial data - will be personalized based on quiz
+DEFAULT_USER_DATA = {
     "user_id": "demo_user",
     "name": "Alex",
     "total_balance": 24563.00,
@@ -28,6 +28,9 @@ USER_DATA = {
         {"name": "New Car Down Payment", "target": 5000, "current": 2100, "completed": False}
     ]
 }
+
+# Store personalized data per user
+USER_DATA = DEFAULT_USER_DATA.copy()
 
 # Transaction templates
 TRANSACTION_TEMPLATES = [
@@ -50,8 +53,123 @@ TRANSACTION_TEMPLATES = [
     {"merchant": "Gym", "amount": -35.00, "category": "Health"},
 ]
 
-async def get_user_financial_data() -> Dict:
-    """Get current user financial data"""
+def personalize_financial_data(quiz_data: Dict) -> None:
+    """Personalize financial data based on quiz responses"""
+    global USER_DATA
+    
+    # Reset to default
+    USER_DATA = DEFAULT_USER_DATA.copy()
+    
+    # Adjust based on income level
+    if quiz_data.get('income') == 'under-50k':
+        USER_DATA['monthly_income'] = 3200.00
+        USER_DATA['total_balance'] = 8500.00
+        USER_DATA['savings_balance'] = 3200.00
+        USER_DATA['checking_balance'] = 1800.00
+        USER_DATA['investment_balance'] = 3500.00
+        USER_DATA['credit_score'] = 680
+        USER_DATA['credit_card_debt'] = 2800.00
+    elif quiz_data.get('income') == '50k-100k':
+        USER_DATA['monthly_income'] = 5500.00
+        USER_DATA['total_balance'] = 24563.00
+        USER_DATA['savings_balance'] = 12943.00
+        USER_DATA['checking_balance'] = 3200.00
+        USER_DATA['investment_balance'] = 8420.00
+        USER_DATA['credit_score'] = 742
+        USER_DATA['credit_card_debt'] = 1850.00
+    elif quiz_data.get('income') == '100k-150k':
+        USER_DATA['monthly_income'] = 9200.00
+        USER_DATA['total_balance'] = 45000.00
+        USER_DATA['savings_balance'] = 22000.00
+        USER_DATA['checking_balance'] = 5000.00
+        USER_DATA['investment_balance'] = 18000.00
+        USER_DATA['credit_score'] = 780
+        USER_DATA['credit_card_debt'] = 1200.00
+    elif quiz_data.get('income') == 'over-150k':
+        USER_DATA['monthly_income'] = 15000.00
+        USER_DATA['total_balance'] = 85000.00
+        USER_DATA['savings_balance'] = 35000.00
+        USER_DATA['checking_balance'] = 8000.00
+        USER_DATA['investment_balance'] = 42000.00
+        USER_DATA['credit_score'] = 820
+        USER_DATA['credit_card_debt'] = 800.00
+    
+    # Adjust based on savings level
+    if quiz_data.get('savings') == 'under-5k':
+        USER_DATA['savings_balance'] = min(USER_DATA['savings_balance'], 3000)
+        USER_DATA['total_balance'] = USER_DATA['checking_balance'] + USER_DATA['savings_balance'] + USER_DATA['investment_balance']
+    elif quiz_data.get('savings') == '5k-25k':
+        USER_DATA['savings_balance'] = min(max(USER_DATA['savings_balance'], 5000), 25000)
+    elif quiz_data.get('savings') == '25k-50k':
+        USER_DATA['savings_balance'] = min(max(USER_DATA['savings_balance'], 25000), 50000)
+    elif quiz_data.get('savings') == 'over-50k':
+        USER_DATA['savings_balance'] = max(USER_DATA['savings_balance'], 50000)
+    
+    # Adjust goals based on primary goal
+    primary_goal = quiz_data.get('primaryGoal')
+    if primary_goal == 'emergency-fund':
+        USER_DATA['goals'] = [
+            {"name": "Emergency Fund", "target": 15000, "current": min(USER_DATA['savings_balance'] * 0.6, 8500), "completed": False},
+            {"name": "Short-term Savings", "target": 5000, "current": 2100, "completed": False}
+        ]
+    elif primary_goal == 'pay-debt':
+        # Higher debt for debt-focused users
+        USER_DATA['credit_card_debt'] = max(USER_DATA['credit_card_debt'], 3500)
+        USER_DATA['goals'] = [
+            {"name": "Pay Off Credit Cards", "target": USER_DATA['credit_card_debt'], "current": 0, "completed": False},
+            {"name": "Emergency Fund", "target": 5000, "current": 1200, "completed": False}
+        ]
+    elif primary_goal == 'save-home':
+        USER_DATA['goals'] = [
+            {"name": "Home Down Payment", "target": 50000, "current": min(USER_DATA['savings_balance'] * 0.4, 15000), "completed": False},
+            {"name": "Closing Costs", "target": 8000, "current": 2500, "completed": False}
+        ]
+    elif primary_goal == 'retirement':
+        USER_DATA['goals'] = [
+            {"name": "401(k) Contribution", "target": 20000, "current": 12000, "completed": False},
+            {"name": "IRA Maxing", "target": 6500, "current": 3200, "completed": False}
+        ]
+    elif primary_goal == 'invest':
+        # Higher investment balance for investment-focused users
+        USER_DATA['investment_balance'] = max(USER_DATA['investment_balance'], USER_DATA['total_balance'] * 0.4)
+        USER_DATA['goals'] = [
+            {"name": "Investment Portfolio Growth", "target": 25000, "current": USER_DATA['investment_balance'], "completed": False},
+            {"name": "Diversified Holdings", "target": 10000, "current": 6500, "completed": False}
+        ]
+    
+    # Adjust risk-based metrics
+    if quiz_data.get('riskTolerance') == 'conservative':
+        USER_DATA['investment_balance'] = min(USER_DATA['investment_balance'], USER_DATA['total_balance'] * 0.2)
+        USER_DATA['savings_balance'] = max(USER_DATA['savings_balance'], USER_DATA['total_balance'] * 0.6)
+    elif quiz_data.get('riskTolerance') == 'aggressive':
+        USER_DATA['investment_balance'] = max(USER_DATA['investment_balance'], USER_DATA['total_balance'] * 0.5)
+        USER_DATA['savings_balance'] = min(USER_DATA['savings_balance'], USER_DATA['total_balance'] * 0.3)
+    
+    # Recalculate total balance
+    USER_DATA['total_balance'] = USER_DATA['checking_balance'] + USER_DATA['savings_balance'] + USER_DATA['investment_balance']
+    
+    # Ensure realistic monthly expenses first
+    if quiz_data.get('income') == 'under-50k':
+        USER_DATA['monthly_expenses'] = USER_DATA['monthly_income'] * 0.85  # 85% expense ratio for lower income
+    elif quiz_data.get('income') == 'over-150k':
+        USER_DATA['monthly_expenses'] = USER_DATA['monthly_income'] * 0.60  # 60% expense ratio for higher income
+    else:
+        USER_DATA['monthly_expenses'] = USER_DATA['monthly_income'] * 0.76  # 76% expense ratio for middle income
+    
+    # Calculate realistic savings rate
+    if USER_DATA['monthly_income'] > 0:
+        monthly_savings = USER_DATA['monthly_income'] - USER_DATA['monthly_expenses']
+        USER_DATA['savings_rate'] = (monthly_savings / USER_DATA['monthly_income']) * 100
+        USER_DATA['savings_rate'] = max(5, min(USER_DATA['savings_rate'], 40))  # Cap between 5-40%
+
+
+async def get_user_financial_data(quiz_data: Dict = None) -> Dict:
+    """Get current user financial data, personalized by quiz if provided"""
+    
+    # Personalize data if quiz data is provided
+    if quiz_data:
+        personalize_financial_data(quiz_data)
+    
     # Generate some recent transactions if empty
     if not USER_DATA["recent_transactions"]:
         USER_DATA["recent_transactions"] = generate_recent_transactions()

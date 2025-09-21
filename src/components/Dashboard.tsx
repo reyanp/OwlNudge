@@ -14,6 +14,8 @@ import { ChatModal } from "./chat/ChatModal";
 import { AskTeamModal } from "./ask/AskTeamModal";
 import { ResetQuizButton } from "./ResetQuizButton";
 import { useQuiz } from "@/contexts/QuizContext";
+import { ProfileSettingsDialog } from "./settings/ProfileSettingsDialog";
+import { OffersSection } from "./offers/OffersSection";
 
 // Mock data for demonstration - generic beginner-friendly messages
 const mockAgents = [
@@ -121,6 +123,7 @@ export function Dashboard() {
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [chatInitialMessage, setChatInitialMessage] = useState<string | undefined>(undefined);
   const [askTeamOpen, setAskTeamOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   
   // Get quiz data for personalization
   const { quizData, getUserProfile } = useQuiz();
@@ -216,25 +219,26 @@ export function Dashboard() {
   const getWelcomeMessage = () => {
     const hour = new Date().getHours();
     const timeGreeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+    const namePart = quizData?.name ? `, ${quizData.name}` : '';
     
-    if (!quizData) return `${timeGreeting}, Welcome!`;
+    if (!quizData) return `${timeGreeting}${namePart}!`;
     
     // Personalize based on primary goal
     if (quizData.primaryGoal === 'emergency-fund') {
-      return `${timeGreeting}! Let's Build Your Safety Net`;
+      return `${timeGreeting}${namePart}! Let's Build Your Safety Net`;
     } else if (quizData.primaryGoal === 'pay-debt') {
-      return `${timeGreeting}! Your Debt-Free Journey Starts Here`;
+      return `${timeGreeting}${namePart}! Your Debt-Free Journey Starts Here`;
     } else if (quizData.primaryGoal === 'save-home') {
-      return `${timeGreeting}! Your Dream Home Awaits`;
+      return `${timeGreeting}${namePart}! Your Dream Home Awaits`;
     } else if (quizData.primaryGoal === 'retirement') {
-      return `${timeGreeting}! Planning Your Future`;
+      return `${timeGreeting}${namePart}! Planning Your Future`;
     } else if (quizData.primaryGoal === 'invest') {
-      return `${timeGreeting}! Ready to Grow Your Wealth`;
+      return `${timeGreeting}${namePart}! Ready to Grow Your Wealth`;
     } else if (quizData.primaryGoal === 'education') {
-      return `${timeGreeting}! Investing in Education`;
+      return `${timeGreeting}${namePart}! Investing in Education`;
     }
     
-    return `${timeGreeting}! Your Financial Journey Begins`;
+    return `${timeGreeting}${namePart}! Your Financial Journey Begins`;
   };
   
   // Handle new notifications: inline preview, optional auto-open behaviors, and bell bump
@@ -305,6 +309,7 @@ export function Dashboard() {
                 variant="ghost" 
                 size="sm"
                 className="p-3 hover:bg-slate-100 rounded-xl border-2 border-transparent hover:border-slate-200 transition-all"
+                onClick={() => setSettingsOpen(true)}
               >
                 <Settings className="w-5 h-5 text-slate-600" />
               </Button>
@@ -312,6 +317,7 @@ export function Dashboard() {
                 variant="ghost" 
                 size="sm"
                 className="p-3 hover:bg-slate-100 rounded-xl border-2 border-transparent hover:border-slate-200 transition-all"
+                onClick={() => setSettingsOpen(true)}
               >
                 <User className="w-5 h-5 text-slate-600" />
               </Button>
@@ -379,6 +385,11 @@ export function Dashboard() {
 
         {/* Main Content - Full Width */}
         <div className="space-y-8">
+          {/* Smart Offers / Inclusivity Section */}
+          <div className="bg-white border-2 border-slate-200 rounded-xl p-6">
+            <OffersSection />
+          </div>
+
           {/* Personalized Insights Based on Quiz */}
           {quizData && (
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6">
@@ -500,6 +511,9 @@ export function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Profile & Settings */}
+        <ProfileSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
         {/* Notifications Drawer */}
         <NotificationsDrawer

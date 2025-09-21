@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 interface QuizData {
+  // Profile
+  name?: string; // display name for greeting/profile
+
   age: string;
   income: string;
   employmentStatus: string;

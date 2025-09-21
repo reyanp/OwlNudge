@@ -48,6 +48,7 @@ const QuizSimplified = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
   const [quizData, setQuizData] = useState<QuizData>({
+    name: "",
     age: "",
     income: "",
     employmentStatus: "",

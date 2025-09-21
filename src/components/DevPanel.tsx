@@ -40,6 +40,7 @@ const DEMO_PERSONAS = {
     icon: GraduationCap,
     backstory: "Computer science major working part-time at campus. Building credit for the first time.",
     data: {
+      name: "Emma",
       age: "20",
       income: "under-50k",
       profession: "student",
@@ -70,6 +71,7 @@ const DEMO_PERSONAS = {
     icon: Car,
     backstory: "Uber driver and freelance designer. Immigrant building financial foundation in the US.",
     data: {
+      name: "Carlos",
       age: "28",
       income: "50k-100k",
       profession: "gig-worker",
@@ -100,6 +102,7 @@ const DEMO_PERSONAS = {
     icon: Building2,
     backstory: "Software engineer at a startup. Wants to optimize investments and plan for early retirement.",
     data: {
+      name: "Sarah",
       age: "32",
       income: "over-150k",
       profession: "full-time",
@@ -130,6 +133,7 @@ const DEMO_PERSONAS = {
     icon: Globe,
     backstory: "Recent arrival on H1B visa. Learning American financial system while supporting family.",
     data: {
+      name: "Amira",
       age: "29",
       income: "100k-150k",
       profession: "full-time",

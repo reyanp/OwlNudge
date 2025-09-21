@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AgentCard } from "./AgentCard";
 import { FinancialMetric } from "./FinancialMetric";
 import { NotificationsButton } from "./header/NotificationsButton";
@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Settings, User, Sparkles, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useFinancialMetrics } from "@/hooks/use-backend";
+import { useNotifications } from "@/contexts/NotificationsContext";
+import { useUXFlags } from "@/contexts/UXFlagsContext";
+import { ChatModal } from "./chat/ChatModal";
+import { AskTeamModal } from "./ask/AskTeamModal";
+import { ResetQuizButton } from "./ResetQuizButton";
+import { useQuiz } from "@/contexts/QuizContext";
 
 // Mock data for demonstration
 const mockAgents = [
@@ -109,31 +116,108 @@ const mockNotifications = [
 ];
 
 export function Dashboard() {
-  const [notifications, setNotifications] = useState(mockNotifications);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [chatInitialMessage, setChatInitialMessage] = useState<string | undefined>(undefined);
+  const [askTeamOpen, setAskTeamOpen] = useState(false);
+  
+  // Get quiz data for personalization
+  const { quizData, getUserProfile } = useQuiz();
+  const userProfile = getUserProfile();
+  
+  // Use real backend data
+  const { metrics, loading: metricsLoading, error: metricsError } = useFinancialMetrics();
+  const { 
+    notifications, 
+    unreadCount, 
+    isConnected,
+    markAsRead,
+    markAllAsRead,
+    clearNotification,
+    triggerDemo 
+  } = useNotifications();
+  
+  // Use backend metrics or fallback to mock
+  const displayMetrics = metrics.length > 0 ? metrics : mockMetrics;
 
   const handleChatWithAgent = (agentId: string) => {
     setSelectedAgent(agentId);
-    // In a real app, this would navigate to the chat interface
-    console.log(`Opening chat with agent: ${agentId}`);
+    setChatModalOpen(true);
   };
-
-  const handleMarkAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
-    );
-  };
-
-
 
   const handleTakeAction = (notificationId: string, agentId: string) => {
-    handleMarkAsRead(notificationId);
+    markAsRead(notificationId);
     handleChatWithAgent(agentId);
   };
 
-  const unreadNotifications = notifications.filter(n => !n.isRead).length;
   const proactiveAgents = mockAgents.filter(a => a.isProactive).length;
+  
+  // Generate personalized welcome message based on quiz data
+  const getWelcomeMessage = () => {
+    const hour = new Date().getHours();
+    const timeGreeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+    
+    if (!quizData) return `${timeGreeting}, Welcome!`;
+    
+    // Personalize based on primary goal
+    if (quizData.primaryGoal === 'emergency-fund') {
+      return `${timeGreeting}! Let's Build Your Safety Net`;
+    } else if (quizData.primaryGoal === 'pay-debt') {
+      return `${timeGreeting}! Your Debt-Free Journey Starts Here`;
+    } else if (quizData.primaryGoal === 'save-home') {
+      return `${timeGreeting}! Your Dream Home Awaits`;
+    } else if (quizData.primaryGoal === 'retirement') {
+      return `${timeGreeting}! Planning Your Future`;
+    } else if (quizData.primaryGoal === 'invest') {
+      return `${timeGreeting}! Ready to Grow Your Wealth`;
+    } else if (quizData.primaryGoal === 'education') {
+      return `${timeGreeting}! Investing in Education`;
+    }
+    
+    return `${timeGreeting}! Your Financial Journey Begins`;
+  };
+  
+  // Handle new notifications: inline preview, optional auto-open behaviors, and bell bump
+  const { flags } = useUXFlags();
+  const lastNotifiedId = useRef<string | null>(null);
+  const [previewByAgent, setPreviewByAgent] = useState<Record<string, { message: string; timeout?: any }>>({});
+  const [bellAnimateKey, setBellAnimateKey] = useState(0);
+
+  useEffect(() => {
+    if (!notifications || notifications.length === 0) return;
+    const latest = notifications[0];
+    if (latest.id === lastNotifiedId.current) return;
+    lastNotifiedId.current = latest.id;
+
+    // Bump bell
+    setBellAnimateKey((k) => k + 1);
+
+    if (flags.autoOpenDrawer) {
+      setNotificationDrawerOpen(true);
+    }
+    if (flags.autoOpenChat && (latest.actionRequired || latest.priority === 'high' || latest.type === 'alert')) {
+      setSelectedAgent(latest.agentId);
+      setChatInitialMessage(latest.message);
+      setChatModalOpen(true);
+    }
+
+    // Inline preview (non-intrusive)
+    if (flags.inlinePreview) {
+      const agentId = latest.agentId;
+      // clear existing timeout if any
+      const existing = previewByAgent[agentId];
+      if (existing?.timeout) clearTimeout(existing.timeout);
+      const t = setTimeout(() => {
+        setPreviewByAgent((prev) => {
+          const copy = { ...prev };
+          delete copy[agentId];
+          return copy;
+        });
+      }, 8000);
+      setPreviewByAgent((prev) => ({ ...prev, [agentId]: { message: latest.message, timeout: t } }));
+    }
+  }, [notifications, flags]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -142,19 +226,21 @@ export function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-18">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center border-2 border-white shadow-lg">
-                <Sparkles className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center border-2 border-white shadow-lg">
+                <span className="text-2xl">🦉</span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">FinancePal</h1>
-                <p className="text-sm font-medium text-slate-600">AI Financial Advisory</p>
+                <h1 className="text-2xl font-bold text-slate-900">OwlNudge</h1>
+                <p className="text-sm font-medium text-slate-600">Your Personal Financial Guide</p>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
+              <ResetQuizButton />
               <NotificationsButton 
-                count={unreadNotifications}
+                count={unreadCount}
                 onOpen={() => setNotificationDrawerOpen(true)}
+                animate={bellAnimateKey > 0}
               />
               <Button 
                 variant="ghost" 
@@ -181,35 +267,43 @@ export function Dashboard() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-4xl font-bold text-slate-900 mb-3">
-                Good morning, Alex
+                {getWelcomeMessage()}
               </h2>
               <p className="text-lg text-slate-600">
+                {userProfile && (
+                  <span className="mr-4">
+                    Your Profile: <span className="font-semibold capitalize">{userProfile.riskProfile}</span> investor,
+                    {' '}focused on <span className="font-semibold capitalize">{userProfile.primaryFocus}</span>
+                  </span>
+                )}
                 {proactiveAgents > 0 && (
-                  <button 
-                    onClick={() => setNotificationDrawerOpen(true)}
-                    className="inline-flex items-center gap-2 text-indigo-600 font-semibold bg-indigo-50 px-3 py-2 rounded-full border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 transition-all"
+                  <span 
+                    className="inline-flex items-center gap-2 text-blue-700 font-semibold bg-blue-50 px-3 py-2 rounded-full border border-blue-200"
                   >
                     <Sparkles className="w-4 h-4" />
                     {proactiveAgents} agent{proactiveAgents > 1 ? 's' : ''} have insights for you
-                  </button>
+                  </span>
                 )}
               </p>
             </div>
-            {proactiveAgents > 0 && (
-              <Button 
-                onClick={() => setNotificationDrawerOpen(true)}
-                className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-semibold px-6 py-3 rounded-xl border-2 border-indigo-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
-              >
-                View All Insights
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            )}
+            <Button 
+              onClick={() => setAskTeamOpen(true)}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold px-6 py-3 rounded-xl border-2 border-blue-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+            >
+              Ask OwlNudge
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
           </div>
         </div>
 
         {/* Financial Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          {mockMetrics.map((metric, index) => (
+          {metricsLoading ? (
+            <div className="col-span-full text-center py-8">
+              <div className="animate-pulse text-slate-500">Loading financial data...</div>
+            </div>
+          ) : (
+            displayMetrics.map((metric, index) => (
             <FinancialMetric
               key={index}
               title={metric.title}
@@ -220,11 +314,110 @@ export function Dashboard() {
               variant={metric.variant}
               className="agent-entrance"
             />
-          ))}
+          ))
+          )}
         </div>
 
         {/* Main Content - Full Width */}
         <div className="space-y-8">
+          {/* Personalized Insights Based on Quiz */}
+          {quizData && (
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6">
+              <h3 className="text-xl font-bold text-slate-900 mb-4">
+                Your Personalized Financial Profile
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-slate-600 mb-2">Based on your assessment, we've identified:</p>
+                  <ul className="space-y-2">
+                    {quizData.primaryGoal && (
+                      <li className="flex items-center gap-2">
+                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span className="text-slate-700">
+                          Primary Goal: <span className="font-semibold">
+                            {quizData.primaryGoal === 'emergency-fund' && 'Building Emergency Fund'}
+                            {quizData.primaryGoal === 'pay-debt' && 'Paying Off Debt'}
+                            {quizData.primaryGoal === 'save-home' && 'Saving for a Home'}
+                            {quizData.primaryGoal === 'retirement' && 'Retirement Planning'}
+                            {quizData.primaryGoal === 'invest' && 'Growing Investments'}
+                            {quizData.primaryGoal === 'education' && 'Education Savings'}
+                          </span>
+                        </span>
+                      </li>
+                    )}
+                    {quizData.timeHorizon && (
+                      <li className="flex items-center gap-2">
+                        <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                        <span className="text-slate-700">
+                          Timeline: <span className="font-semibold">
+                            {quizData.timeHorizon === 'less-1' && 'Less than 1 year'}
+                            {quizData.timeHorizon === '1-3' && '1-3 years'}
+                            {quizData.timeHorizon === '3-5' && '3-5 years'}
+                            {quizData.timeHorizon === '5-10' && '5-10 years'}
+                            {quizData.timeHorizon === 'over-10' && 'Over 10 years'}
+                          </span>
+                        </span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600 mb-2">Your financial agents will focus on:</p>
+                  <ul className="space-y-2">
+                    {userProfile?.primaryFocus === 'stability' && (
+                      <>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          <span className="text-slate-700">Building financial security</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          <span className="text-slate-700">Debt reduction strategies</span>
+                        </li>
+                      </>
+                    )}
+                    {userProfile?.primaryFocus === 'growth' && (
+                      <>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          <span className="text-slate-700">Investment opportunities</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          <span className="text-slate-700">Long-term wealth building</span>
+                        </li>
+                      </>
+                    )}
+                    {userProfile?.primaryFocus === 'saving' && (
+                      <>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          <span className="text-slate-700">Savings optimization</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          <span className="text-slate-700">Goal-based planning</span>
+                        </li>
+                      </>
+                    )}
+                    {userProfile?.primaryFocus === 'balanced' && (
+                      <>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          <span className="text-slate-700">Comprehensive financial planning</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          <span className="text-slate-700">Balanced approach to wealth</span>
+                        </li>
+                      </>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Agents Section */}
           <div>
             <h3 className="text-2xl font-bold text-slate-900 mb-6">
@@ -236,45 +429,15 @@ export function Dashboard() {
                   key={agent.id}
                   agent={agent}
                   onChat={handleChatWithAgent}
+                  onPreviewChat={(aid, message) => {
+                    setSelectedAgent(aid);
+                    setChatInitialMessage(message);
+                    setChatModalOpen(true);
+                  }}
+                  previewMessage={previewByAgent[agent.id]?.message}
                   className="agent-entrance"
                 />
               ))}
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="bg-white border-2 border-slate-200 rounded-xl shadow-md p-6">
-            <h3 className="text-xl font-bold text-slate-900 mb-5">
-              Quick Actions
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <button className="h-24 flex flex-col items-center justify-center gap-3 bg-white border-2 border-slate-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition-all hover:-translate-y-0.5 shadow-sm hover:shadow-md">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center border-2 border-white shadow-md">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-sm font-semibold text-slate-700">Ask Any Agent</span>
-              </button>
-              <button className="h-24 flex flex-col items-center justify-center gap-3 bg-white border-2 border-slate-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition-all hover:-translate-y-0.5 shadow-sm hover:shadow-md">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center border-2 border-white shadow-md">
-                  <ArrowRight className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-sm font-semibold text-slate-700">Set New Goal</span>
-              </button>
-              <button 
-                onClick={() => setNotificationDrawerOpen(true)}
-                className="h-24 flex flex-col items-center justify-center gap-3 bg-white border-2 border-slate-200 rounded-xl hover:border-purple-300 hover:bg-purple-50 transition-all hover:-translate-y-0.5 shadow-sm hover:shadow-md"
-              >
-                <div className="w-10 h-10 rounded-xl bg-purple-500 flex items-center justify-center border-2 border-white shadow-md">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-sm font-semibold text-slate-700">View Insights</span>
-              </button>
-              <button className="h-24 flex flex-col items-center justify-center gap-3 bg-white border-2 border-slate-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all hover:-translate-y-0.5 shadow-sm hover:shadow-md">
-                <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center border-2 border-white shadow-md">
-                  <ArrowRight className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-sm font-semibold text-slate-700">Financial Report</span>
-              </button>
             </div>
           </div>
         </div>
@@ -285,12 +448,34 @@ export function Dashboard() {
           onOpenChange={setNotificationDrawerOpen}
           notifications={notifications}
           onMarkAllRead={() => {
-            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            markAllAsRead();
             toast.success("All notifications marked as read");
           }}
-          onMarkAsRead={handleMarkAsRead}
+          onMarkAsRead={markAsRead}
           onTakeAction={handleTakeAction}
         />
+        
+        {/* Ask Team Modal */}
+        <AskTeamModal
+          open={askTeamOpen}
+          onOpenChange={setAskTeamOpen}
+          onStartPlan={(message, recommended) => {
+            setAskTeamOpen(false)
+            setSelectedAgent(recommended || 'sofia')
+            setChatInitialMessage(message)
+            setChatModalOpen(true)
+          }}
+        />
+
+        {/* Chat Modal */}
+        {selectedAgent && (
+          <ChatModal
+            open={chatModalOpen}
+            onOpenChange={setChatModalOpen}
+            agentId={selectedAgent}
+            initialAgentMessage={chatInitialMessage}
+          />
+        )}
       </div>
     </div>
   );

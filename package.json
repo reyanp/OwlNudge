@@ -1,7 +1,8 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "owlnudge",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Accessible Financial Planning for Everyone - No Bank Account Required",
   "type": "module",
   "scripts": {
     "dev": "vite",

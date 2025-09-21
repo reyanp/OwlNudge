@@ -13,6 +13,8 @@ interface AgentCardProps {
     isProactive?: boolean;
   };
   onChat: (agentId: string) => void;
+  onPreviewChat?: (agentId: string, message: string) => void;
+  previewMessage?: string;
   className?: string;
 }
 
@@ -37,7 +39,7 @@ const agentConfig = {
   }
 };
 
-export function AgentCard({ agent, onChat, className }: AgentCardProps) {
+export function AgentCard({ agent, onChat, onPreviewChat, previewMessage, className }: AgentCardProps) {
   const config = agentConfig[agent.id];
   const Icon = config.icon;
 
@@ -95,13 +97,30 @@ export function AgentCard({ agent, onChat, className }: AgentCardProps) {
           </div>
         </div>
 
-        {/* Last Message */}
-        {agent.lastMessage && (
-          <div className="p-4 rounded-2xl mb-6 bg-white/70 backdrop-blur-sm border border-white/50 shadow-sm">
-            <p className="text-sm text-slate-700 leading-relaxed font-medium">
-              "{agent.lastMessage}"
+        {/* Last Message or Preview */}
+        {previewMessage ? (
+          <button
+            onClick={() => onPreviewChat?.(agent.id, previewMessage)}
+            className="w-full text-left p-4 rounded-2xl mb-6 bg-white border border-slate-200 shadow-sm hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-semibold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.64 5.64l2.83 2.83M15.53 15.53l2.83 2.83M5.64 18.36l2.83-2.83M15.53 8.47l2.83-2.83"/></svg>
+                New insight
+              </span>
+            </div>
+            <p className="text-sm text-slate-700 leading-relaxed font-medium truncate">
+              {previewMessage}
             </p>
-          </div>
+          </button>
+        ) : (
+          agent.lastMessage && (
+            <div className="p-4 rounded-2xl mb-6 bg-white/70 backdrop-blur-sm border border-white/50 shadow-sm">
+              <p className="text-sm text-slate-700 leading-relaxed font-medium">
+                "{agent.lastMessage}"
+              </p>
+            </div>
+          )
         )}
 
         {/* Action Button */}

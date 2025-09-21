@@ -6,16 +6,20 @@ import { cn } from "@/lib/utils";
 type Props = { 
   count: number; 
   onOpen: () => void; 
+  animate?: boolean;
 };
 
-export function NotificationsButton({ count, onOpen }: Props) {
+export function NotificationsButton({ count, onOpen, animate }: Props) {
   return (
     <Button
       variant="ghost"
       size="icon"
       aria-label={`Notifications${count ? `: ${count} new` : ""}`}
       onClick={onOpen}
-      className="relative p-3 hover:bg-slate-100 rounded-xl border-2 border-transparent hover:border-slate-200 transition-all"
+      className={cn(
+        "relative p-3 hover:bg-slate-100 rounded-xl border-2 border-transparent hover:border-slate-200 transition-all",
+        animate && "bell-bump"
+      )}
     >
       <Bell className="h-5 w-5 text-slate-600" aria-hidden />
       {count > 0 && (

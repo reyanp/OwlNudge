@@ -4,7 +4,7 @@ import { FinancialMetric } from "./FinancialMetric";
 import { NotificationsButton } from "./header/NotificationsButton";
 import { NotificationsDrawer } from "./notifications/NotificationsDrawer";
 import { Button } from "@/components/ui/button";
-import { Settings, User, Sparkles, ArrowRight } from "lucide-react";
+import { Settings, User, Sparkles, ArrowRight, Gamepad2, Puzzle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useFinancialMetrics } from "@/hooks/use-backend";
@@ -16,6 +16,7 @@ import { ResetQuizButton } from "./ResetQuizButton";
 import { useQuiz } from "@/contexts/QuizContext";
 import { ProfileSettingsDialog } from "./settings/ProfileSettingsDialog";
 import { OffersSection } from "./offers/OffersSection";
+import { LearningModeDialog } from "./learning/LearningModeDialog";
 
 // Mock data for demonstration - generic beginner-friendly messages
 const mockAgents = [
@@ -124,6 +125,7 @@ export function Dashboard() {
   const [chatInitialMessage, setChatInitialMessage] = useState<string | undefined>(undefined);
   const [askTeamOpen, setAskTeamOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [learningOpen, setLearningOpen] = useState(false);
   
   // Get quiz data for personalization
   const { quizData, getUserProfile } = useQuiz();
@@ -308,16 +310,21 @@ export function Dashboard() {
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="p-3 hover:bg-slate-100 rounded-xl border-2 border-transparent hover:border-slate-200 transition-all"
-                onClick={() => setSettingsOpen(true)}
+                className="relative p-3 hover:bg-slate-100 rounded-xl border-2 border-transparent hover:border-slate-200 transition-all"
+                onClick={() => setLearningOpen(true)}
+                title="Learning Mode"
               >
-                <Settings className="w-5 h-5 text-slate-600" />
+                <Puzzle className="w-5 h-5 text-slate-600" />
+                <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-indigo-600 border border-indigo-300 flex items-center justify-center shadow">
+                  <Gamepad2 className="w-3 h-3 text-white" />
+                </div>
               </Button>
               <Button 
                 variant="ghost" 
                 size="sm"
                 className="p-3 hover:bg-slate-100 rounded-xl border-2 border-transparent hover:border-slate-200 transition-all"
                 onClick={() => setSettingsOpen(true)}
+                title="Profile & Settings"
               >
                 <User className="w-5 h-5 text-slate-600" />
               </Button>
@@ -511,6 +518,9 @@ export function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Learning Mode */}
+        <LearningModeDialog open={learningOpen} onOpenChange={setLearningOpen} />
 
         {/* Profile & Settings */}
         <ProfileSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
